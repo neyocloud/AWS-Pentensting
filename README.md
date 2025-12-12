@@ -105,23 +105,110 @@ Attempting to list the Level 2 bucket via AWS CLI. The first attempt (with my cr
 <img width="776" height="115" alt="image" src="https://github.com/user-attachments/assets/37b310ed-77df-4f8a-abd0-fb5b9651a7fa" />
 
 
+following the next step.....
+
+
+```
+
+ aws s3 cp \
+s3://level2-c8b217a33fcf1f839f6f1f73a00a9ae7.flaws.cloud/secret-e4443fc.html \
+./thesecret2.html \
+--no-sign-request
+
+```
+Then i opened using 
+
+```
+
+ open thesecret2.html
+
+```
+
+<img width="1253" height="735" alt="image" src="https://github.com/user-attachments/assets/bbd3f8d6-bf74-4105-b690-2426f300516f" />
+
+
+
+Repeating the usual steps
+
+<img width="757" height="453" alt="image" src="https://github.com/user-attachments/assets/8f276e9f-1ad5-40d8-9138-4c3c91d57dfa" />
+
+
+
+```
+
+ aws s3 ls s3://level3-9afd3927f195e10225021a578e6f78df.flaws.cloud
+
+```
+
+
 
 Downloading the Entire Bucket (Repository): Given the presence of a Git repository, I decided to download the entire bucket contents for analysis. Instead of fetching files one-by-one, I used the convenient sync command:
 
 mkdir thecretstuff && cd thecretstuff
-aws s3 sync s3://level3-<hash>.flaws.cloud/ . --no-sign-request
+
+```
+ aws s3 sync s3://level3-9afd3927f195e10225021a578e6f78df.flaws.cloud ./thecretstuff
+```
+
+
+<img width="1380" height="523" alt="image" src="https://github.com/user-attachments/assets/d7afa1e0-359e-43c5-89ce-b818db8c67d1" />
 
 
 This command recursively downloaded all files from the bucket into a local directory (thecretstuff). The output (shown in the screenshot above) logged each file as it was downloaded, including many files under a .git directory (e.g., objects, refs, config, etc.). Essentially, I now had a local copy of the website’s Git repository.
 
+
+
+<img width="1113" height="252" alt="image" src="https://github.com/user-attachments/assets/16fd562f-c1e3-4aa5-a5b7-7f00a7cfb2ab" />
+
+
+Went further to use the command tree
+
+<img width="541" height="913" alt="image" src="https://github.com/user-attachments/assets/9d247c79-f1a6-4a5b-b736-03929a98ba89" />
+
+
+
 Investigating the Git Repository: With the repository on hand, I opened a terminal in the thecretstuff directory (which now was a Git repo) and ran standard git commands to see the history:
+
+
+<img width="1404" height="597" alt="image" src="https://github.com/user-attachments/assets/394247af-dad3-43d9-ab22-fd7e77c85caf" />
+
+
+
+And yes i found both the access key and the secret key
 
 git log — This showed the commit history of the project. I looked at the commit messages and IDs to identify any that might contain secrets.
 
 git checkout <commit_hash> — I checked out earlier commits by their hashes to see the state of the repository at those points in time.
 
 By examining the diffs and files in those commits, I eventually found a file (e.g., access_keys.txt in one commit) that contained AWS Access Key ID and Secret Access Key for a user
-medium.com
-. These were the leaked credentials mentioned in the challenge goal. The challenge had cleverly hidden AWS keys in a previous state of the code repository, assuming that leaving a .git directory publicly accessible would expose that history.
 
-Challenge Outcome and Lessons: Obtaining the AWS keys from the repository essentially completed Level 3. The presence of those credentials demonstrated why one must never expose sensitive files or leave version control repositories in public web roots. I learned that the leaked keys belonged to a vulnerable IAM user set up for the challenge. In a real scenario, such keys could be used by an attacker to access resources. (As a precaution, whenever credentials are exposed, they should be immediately revoked to prevent exploitation
+So i configured my aws profile gotcha using their access key and secret key .......
+
+
+made use of these commands 
+
+```
+ aws s3 ls --profile gotcha s3://level3-9afd3927f195e10225021a578e6f78df.flaws.cloud
+```
+
+```
+ aws s3 ls --profile gotcha
+
+```
+<img width="955" height="290" alt="image" src="https://github.com/user-attachments/assets/1201181d-1ee5-4052-9492-cff234561210" />
+
+
+To anyone else, it might look like a bunch of random files.
+But to me, it felt like stepping into a developer’s forgotten workshop clues everywhere, waiting for someone curious enough to follow them.
+
+The more buckets I listed, the clearer it became:
+This wasn’t just storage.
+It was a roadmap of misconfigurations — a perfect training ground for learning how AWS mistakes lead to real vulnerabilities.
+
+
+**These were the leaked credentials mentioned in the challenge goal. The challenge had cleverly hidden AWS keys in a previous state of the code repository, assuming that leaving a .git directory publicly accessible would expose that history.*
+
+
+
+
+Challenge Outcome and Lessons: Obtaining the AWS keys from the repository essentially completed Level 3. The presence of those credentials demonstrated why one must never expose sensitive files or leave version control repositories in public web roots. I learned that the leaked keys belonged to a vulnerable IAM user set up for the challenge. In a real scenario, such keys could be used by an attacker to access resources. As a precaution, whenever credentials are exposed, they should be immediately revoked to prevent exploitation
