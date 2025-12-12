@@ -4,7 +4,7 @@ Pentesting AWS Misconfigurations: A Hands-On Walkthrough with flaws.cloud
 
 # My Journey Through the flaws.cloud AWS Challenge (Levels 1–3)
 
-Recently, I completed the first three levels of the flaws.cloud AWS security challenge. This challenge involves uncovering misconfigurations in AWS S3 buckets and related services. In this walkthrough, I will describe how I set up my environment (including AWS CLI and IAM credentials) and stepped through each level, discovering hidden secrets and understanding the security lessons along the way. All steps are written from my perspective, as I performed them, complete with the actual commands I ran and their outputs.
+Recently, I completed the first three levels… along the way. All steps are written from my perspective, as I performed them…
 
 Environment Setup and AWS CLI Configuration
 
@@ -14,6 +14,11 @@ AWS Account and IAM User: I made sure I had access to an AWS account (free tier 
 
 AWS CLI Installation: I installed the latest AWS Command Line Interface (AWS CLI v2) on my local machine and verified it was installed by checking the version running aws --version in the terminal
 
+
+<img width="446" height="51" alt="image" src="https://github.com/user-attachments/assets/6b31c8ba-72e9-4f7e-8c25-e41c1cd8f9e5" />
+
+
+
 AWS CLI Configuration: Using the credentials from the IAM user, I configured the AWS CLI on my machine. I ran aws configure (or aws configure --profile [profile-name] for a named profile) and entered the Access Key ID, Secret Access Key, preferred region, and output format when prompted. This saved my credentials locally so I could use AWS CLI commands seamlessly. With this setup complete, I was ready to interact with AWS services from my terminal.
 
 ## Level 1: Enumerating a Public S3 Bucket
@@ -22,7 +27,10 @@ AWS CLI Configuration: Using the credentials from the IAM user, I configured the
 
 Level 1 of the challenge presented the domain flaws.cloud. The goal was to figure out what this domain was and find a hidden "secret" file. The hint suggested this level would be "buckets of fun," which immediately made me suspect an Amazon S3 bucket might be involved.
 
-DNS Enumeration: I began by investigating the domain. Using a DNS lookup tool (nslookup on my Mac terminal), I checked the IP address associated with flaws.cloud. Then I performed a reverse DNS lookup on that IP to see if it pointed to an AWS service. Indeed, the reverse lookup revealed an address in the format s3-website-us-west-2.amazonaws.com, confirming that flaws.cloud was hosted as an S3 static website in the us-west-2 region
+DNS Enumeration: I began by investigating the domain. Using a DNS lookup, I checked the IP address associated with flaws.cloud. Then I performed a reverse DNS lookup on that IP to see if it pointed to an AWS service. Indeed, the method revealed an address in the format s3-website-us-west-2.amazonaws.com, confirming that flaws.cloud was hosted as an S3 static website in the us-west-2 region
+
+
+**The DNS mapping exposes the underlying AWS architecture, region, and storage service — giving you everything you need to start probing the bucket.*
 
 
 <img width="531" height="430" alt="image" src="https://github.com/user-attachments/assets/e706fa45-6fe7-4333-b97c-9359fb1c189b" />
@@ -208,6 +216,17 @@ It was a roadmap of misconfigurations — a perfect training ground for learning
 
 **These were the leaked credentials mentioned in the challenge goal. The challenge had cleverly hidden AWS keys in a previous state of the code repository, assuming that leaving a .git directory publicly accessible would expose that history.*
 
+
+## Notes
+
+
+DNS enumeration can reveal AWS hosting patterns
+
+Public buckets can leak sensitive files
+
+.git directories should never be served over HTTP
+
+Old commits can expose historical secrets
 
 
 
